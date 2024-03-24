@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <title></title>
+    <link rel="stylesheet" href="dist/reveal.css" />
+    <link rel="stylesheet" href="dist/theme/league.css" id="theme" />
+    <link rel="stylesheet" href="plugin/highlight/zenburn.css" />
+	<link rel="stylesheet" href="css/layout.css" />
+	<link rel="stylesheet" href="plugin/customcontrols/style.css">
+
+
+
+    <script defer src="dist/fontawesome/all.min.js"></script>
+
+	<script type="text/javascript">
+		var forgetPop = true;
+		function onPopState(event) {
+			if(forgetPop){
+				forgetPop = false;
+			} else {
+				parent.postMessage(event.target.location.href, "app://obsidian.md");
+			}
+        }
+		window.onpopstate = onPopState;
+		window.onmessage = event => {
+			if(event.data == "reload"){
+				window.document.location.reload();
+			}
+			forgetPop = true;
+		}
+
+		function fitElements(){
+			const itemsToFit = document.getElementsByClassName('fitText');
+			for (const item in itemsToFit) {
+				if (Object.hasOwnProperty.call(itemsToFit, item)) {
+					var element = itemsToFit[item];
+					fitElement(element,1, 1000);
+					element.classList.remove('fitText');
+				}
+			}
+		}
+
+		function fitElement(element, start, end){
+
+			let size = (end + start) / 2;
+			element.style.fontSize = `${size}px`;
+
+			if(Math.abs(start - end) < 1){
+				while(element.scrollHeight > element.offsetHeight){
+					size--;
+					element.style.fontSize = `${size}px`;
+				}
+				return;
+			}
+
+			if(element.scrollHeight > element.offsetHeight){
+				fitElement(element, start, size);
+			} else {
+				fitElement(element, size, end);
+			}		
+		}
+
+
+		document.onreadystatechange = () => {
+			fitElements();
+			if (document.readyState === 'complete') {
+				if (window.location.href.indexOf("?export") != -1){
+					parent.postMessage(event.target.location.href, "app://obsidian.md");
+				}
+				if (window.location.href.indexOf("print-pdf") != -1){
+					let stateCheck = setInterval(() => {
+						clearInterval(stateCheck);
+						window.print();
+					}, 250);
+				}
+			}
+	};
+
+
+        </script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides"><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# Trusted Publishers in PyPI 🐍 📦
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## About Me
+
+
+Jordan Duabe -- `@j4ckofalltrades`
+
+- Software Engineer @ Anaqua
+- Command-line ninja 🥷
+- Has one too many MKBs ⌨
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Agenda
+
+- Intro to PyPI
+- Packaging (and publishing) Flow
+- Trusted Publishing
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## The Python Package Index (PyPI)
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### What is PyPI
+
+- The official third-party software repository for Python
+- aka the Cheese Shop
+- Launched in 2003
+- Hosts > 450,000 packages (as of May 2023)
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### TestPyPI
+
+A separate (test) instance of the [Python Package Index (PyPI)](https://packaging.python.org/en/latest/glossary/#term-Python-Package-Index-PyPI) accessible at [test.pypi.org](https://test.pypi.org).
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Packaging (and publishing) Flow
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Packaging for tools and libraries
+
+<img src="https://packaging.python.org/en/latest/_images/py_pkg_tools_and_libs.png" alt="Python tools and libs" style="object-fit: scale-down">
+
+
+Excerpted from <cite>[The Packaging Gradient (2017)](https://www.youtube.com/watch?v=iLVNWfPWAC8)</cite>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Package structure
+
+```bash
+sampleproject/
+├── LICENSE
+├── pyproject.toml
+├── README.md
+├── src/
+│   └── sampleproject/
+│       ├── __init__.py
+│       └── example.py
+└── tests/
+```
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Configuration file
+
+<img src="https://res.cloudinary.com/j4ckofalltrades/image/upload/v1711294223/talks/pypi-trusted-publisher/config_file_lfbvoy.png" alt="pyproject.toml|620x400" style="width: 620px; height: 400px; object-fit: fill">
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Generating distribution archives
+
+```bash
+python3 -m pip install --upgrade build
+python3 -m build
+
+# output
+ls dist
+dist/
+├── sampleproject-0.0.1-py3-none-any.whl
+└── sampleproject-0.0.1.tar.gz
+```
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Built Distribution (wheel)
+
+<img src="https://res.cloudinary.com/j4ckofalltrades/image/upload/v1711295571/talks/pypi-trusted-publisher/sampleproject-wheel_dat1hf.png" alt="sampleproject wheel|400" style="width: 400px; object-fit: fill">
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Source Distribution (sdist)
+
+<img src="https://res.cloudinary.com/j4ckofalltrades/image/upload/v1711295571/talks/pypi-trusted-publisher/sampleproject-sdist_u6tqob.png" alt="sampleproject sdist|410" style="width: 410px; object-fit: fill">
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Uploading the distribution archives
+
+This requires a (1) PyPI account and an (2) API token.
+
+```bash
+python3 -m pip install --upgrade twine
+python3 -m twine upload dist/*
+
+# prompt for PyPI credentials
+Enter your username: __token__
+Uploading sampleproject-0.0.1-py3-none-any.whl
+100% ━━━━━━━━━━━━━━━━━━━━━━━━━ 8.2/8.2 kB • 00:01 • ?
+Uploading sampleproject-0.0.1.tar.gz
+100% ━━━━━━━━━━━━━━━━━━━━━━━━━ 6.8/6.8 kB • 00:00 • ?
+```
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Automation with GitHub Actions
+
+<img src="https://res.cloudinary.com/j4ckofalltrades/image/upload/v1711296062/talks/pypi-trusted-publisher/pypi_publish_api_token_orw9z1.png" alt="PyPI publish with api token workflow|450" style="width: 450px; object-fit: fill">
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Trusted Publishing
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Publishing with OpenID Connect (OIDC)
+
+1. &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Configure a project on PyPI to trust a GitHub Actions workflow
+1. &shy;<!-- .element: class="fragment" data-fragment-index="2" -->GitHub Actions workflow submits an OIDC token to PyPI
+1. &shy;<!-- .element: class="fragment" data-fragment-index="3" -->PyPI verifies the OIDC token against configured *trusted publisher(s)*
+1. &shy;<!-- .element: class="fragment" data-fragment-index="4" -->PyPI mints and responds with a *short-lived API token* (valid for 15 minutes)
+1. &shy;<!-- .element: class="fragment" data-fragment-index="5" -->GitHub Actions workflow publishes to PyPI using the *short-lived API token*
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### OIDC Flow
+
+<img src="https://docs.github.com/assets/cb-63262/mw-1440/images/help/actions/oidc-architecture.webp" alt="GitHub OIDC integration" style="object-fit: scale-down">
+
+
+See <cite>[About security hardening with OpenID Connect](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect#overview-of-openid-connect)</cite>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Configuring a Trusted Publisher in PyPI
+
+<img src="https://docs.pypi.org/assets/project-publishing-form.png" alt="PyPI Trusted Publisher config|350x550" style="width: 350px; height: 550px; object-fit: fill">
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### The OIDC token
+
+<img src="https://res.cloudinary.com/j4ckofalltrades/image/upload/v1711294223/talks/pypi-trusted-publisher/oidc_token_kpwy6b.png" alt="OIDC token|550x480" style="width: 550px; height: 480px; object-fit: fill">
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Verifying the OIDC token
+
+The [GitHub OIDC provider configuration](https://token.actions.githubusercontent.com/.well-known/openid-configuration) contains the following information:
+
+- The `claims_supported` array that lists all supported JWT claims
+-  The `jwks_uri` (JSON Web Key Set) that contains the public keys used to verify the JWT (JSON Web Token)
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Using trusted publishing with GitHub Actions
+
+<img src="https://res.cloudinary.com/j4ckofalltrades/image/upload/v1711294224/talks/pypi-trusted-publisher/trusted_publisher_diff_grwfxj.png" alt="Trusted Publisher action|500" style="width: 500px; object-fit: fill">
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Putting it all together
+
+<div class="callout callout-color1">
+<div class="callout-title">
+<div class="callout-icon">
+
+<i class="fas fa-info-circle" ></i>
+
+
+</div>
+<div class="callout-title-inner">
+
+Trusted Publisher workflow in action
+
+</div>
+</div>
+<div class="callout-content">
+
+
+
+[github.com/j4ckofalltrades/powerline-k8s](https://github.com/j4ckofalltrades/powerline-k8s)
+
+</div>
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Why use Trusted Publishers?
+
+1. &shy;<!-- .element: class="fragment" data-fragment-index="1" -->**Usability.** With a trusted publisher, no manual API token management is necessary: configuring the publisher is a one-time action for each project.
+1. &shy;<!-- .element: class="fragment" data-fragment-index="2" -->**Security**. Short-lived (effectively ephemeral) tokens reduces potential damage (if the token gets "leaked") as it expires automatically.
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 700px; width: 960px; min-height: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Slides
+
+<img src="data:image/png;base64,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" alt="website|150x150" style="width: 150px; height: 150px; object-fit: fill">
+</div></script></section></div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script src="plugin/zoom/zoom.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/math/math.js"></script>
+	<script src="plugin/mermaid/mermaid.js"></script>
+	<script src="plugin/chart/chart.min.js"></script>
+	<script src="plugin/chart/plugin.js"></script>
+	<script src="plugin/menu/menu.js"></script>
+	<script src="plugin/customcontrols/plugin.js"></script>
+
+    <script>
+      function extend() {
+        var target = {};
+        for (var i = 0; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+        return target;
+      }
+
+	  function isLight(color) {
+		let hex = color.replace('#', '');
+
+		// convert #fff => #ffffff
+		if(hex.length == 3){
+			hex = `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`;
+		}
+
+		const c_r = parseInt(hex.substr(0, 2), 16);
+		const c_g = parseInt(hex.substr(2, 2), 16);
+		const c_b = parseInt(hex.substr(4, 2), 16);
+		const brightness = ((c_r * 299) + (c_g * 587) + (c_b * 114)) / 1000;
+		return brightness > 155;
+	}
+
+	var bgColor = getComputedStyle(document.documentElement).getPropertyValue('--r-background-color').trim();
+	var isLight = isLight(bgColor);
+
+	if(isLight){
+		document.body.classList.add('has-light-background');
+	} else {
+		document.body.classList.add('has-dark-background');
+	}
+
+      // default options to init reveal.js
+      var defaultOptions = {
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        transition: 'default', // none/fade/slide/convex/concave/zoom
+        plugins: [
+          RevealMarkdown,
+          RevealHighlight,
+          RevealZoom,
+          RevealNotes,
+          RevealMath.MathJax3,
+		  RevealMermaid,
+		  RevealChart,
+		  RevealCustomControls,
+		  RevealMenu,
+        ],
+
+
+    	allottedTime: 120 * 1000,
+
+		mathjax3: {
+			mathjax: 'plugin/math/mathjax/tex-mml-chtml.js',
+		},
+		markdown: {
+		  gfm: true,
+		  mangle: true,
+		  pedantic: false,
+		  smartLists: false,
+		  smartypants: false,
+		},
+
+		mermaid: {
+			theme: isLight ? 'default' : 'dark',
+		},
+
+		customcontrols: {
+			controls: [
+				{id: 'toggle-overview',
+				title: 'Toggle overview (O)',
+				icon: '<i class="fa fa-th"></i>',
+				action: 'Reveal.toggleOverview();'
+				},
+			]
+		},
+		menu: {
+			loadIcons: false
+		}
+      };
+
+      // options from URL query string
+      var queryOptions = Reveal().getQueryHash() || {};
+
+      var options = extend(defaultOptions, {"width":960,"height":700,"margin":0.04,"controls":true,"progress":true,"slideNumber":true,"transition":"slide","transitionSpeed":"default"}, queryOptions);
+    </script>
+
+    <script>
+      Reveal.initialize(options);
+    </script>
+  </body>
+
+  <!-- created with Advanced Slides -->
+</html>
